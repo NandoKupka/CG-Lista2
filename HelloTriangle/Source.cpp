@@ -1,11 +1,11 @@
-/* Hello Triangle - código fornecido em https://learnopengl.com/#!Getting-started/Hello-Triangle 
- *
- * Adaptado por Rossana Baptista Queiroz
- * para a disciplina de Computação Gráfica - Jogos Digitais - Unisinos
- * Versão inicial: 7/4/2017
- * Última atualização em 7/4/2017
- *
- */
+/* Hello Triangle - código fornecido em https://learnopengl.com/#!Getting-started/Hello-Triangle
+*
+* Adaptado por Rossana Baptista Queiroz
+* para a disciplina de Computação Gráfica - Jogos Digitais - Unisinos
+* Versão inicial: 7/4/2017
+* Última atualização em 7/4/2017
+*
+*/
 
 #include <iostream>
 #include <string>
@@ -35,6 +35,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
+
+glm::vec3 camPos = glm::vec3(0.0f, 0.0f, -3.0f);
 
 
 // The MAIN function, from here we start the application and run the game loop
@@ -66,7 +68,6 @@ int main()
 	glfwGetFramebufferSize(window, &width, &height);
 	glViewport(0, 0, width, height);
 
-
 	// Build and compile our shader program
 	Shader ourShader("../shaders/transformations.vs", "../shaders/transformations.frag");
 
@@ -77,18 +78,45 @@ int main()
 		0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,    // Bottom Right
 		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   // Bottom Left
 		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   // Top Left 
+
+		-0.5f,  0.5f, -1.0f,   1.0f, 1.0f, 0.0f,   // Top Left 
+		0.5f,  0.5f, -1.0f,   1.0f, 0.0f, 1.0f,    // Top Right
+
+		0.5f,  -0.5f, -1.0f,   0.0f, 1.0f, 0.0f,    // Top Right
+
+		-0.5f,  -0.5f, -1.0f,   0.0f, 0.0f, 1.0f,   // Top Left 
+
+
+
+
 	};
 	GLuint indices[] = {  // Note that we start from 0!
 		0, 1, 3, // First Triangle
-		1, 2, 3  // Second Triangle
+		1, 2, 3,  // Second Triangle
+
+		0,3,5,
+		3,4,5,
+
+		0,1,5,
+		5,1,6,
+
+		4,7,5,
+		7,5,6,
+
+		3,4,7,
+		3,7,2,
+
+		7,6,1,
+		1,7,2
+
 	};
 
 	GLuint VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
-	
-	
+
+
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -108,7 +136,7 @@ int main()
 	glBindVertexArray(0); // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs)
 
 
-	//Habilita o z-buffer
+						  //Habilita o z-buffer
 	glEnable(GL_DEPTH_TEST);
 
 
@@ -123,7 +151,7 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		
+
 		// Activate shader
 		ourShader.Use();
 
@@ -131,11 +159,13 @@ int main()
 		glm::mat4 model;
 		glm::mat4 view;
 		glm::mat4 projection;
-		model = glm::rotate(model, -45.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::rotate(model, (GLfloat)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
 		//model = glm::rotate(model, (GLfloat)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-		
-		projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
+		view = glm::translate(view, camPos);
+
+		//projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.1f, 100.0f);
+		projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
+
 		//projection = glm::perspective(45.0f, (GLfloat)WIDTH / (GLfloat)HEIGHT, 0.1f, 100.0f);
 		// Get their uniform location
 		GLint modelLoc = glGetUniformLocation(ourShader.Program, "model");
@@ -150,7 +180,7 @@ int main()
 
 		// Draw container
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
 		// Swap the screen buffers
@@ -169,5 +199,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camPos = camPos + glm::vec3(0.0f, 0.05f, 0.0f);
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camPos = camPos + glm::vec3(-0.05f, 0.0f, 0.0f);
+
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camPos = camPos + glm::vec3(0.0f, -0.05f, 0.0f);
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camPos = camPos + glm::vec3(0.05f, 0.0f, 0.0f);
+
+
+
 }
 
